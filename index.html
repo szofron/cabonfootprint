@@ -110,7 +110,7 @@ footer{color:#607d8b;font-size:12px;text-align:center;padding:18px}
       <div><label class="fld">ชื่อหน่วยงาน</label><input id="unit" readonly></div>
       <div><label class="fld">ปีที่รายงาน (พ.ศ.)</label><input id="year" class="q" type="number" value="2568"></div>
       <div><label class="fld">ผู้รับผิดชอบ</label><input id="owner" class="q" placeholder="ชื่อ-สกุล"></div>
-      <div><label class="fld">วันที่กรอกข้อมูล</label><input id="date" class="q" placeholder="วว/ดด/ปปปป"></div>
+      <div><label class="fld">วันที่กรอกข้อมูล</label><input id="date" type="date" class="q"><div class="note" id="dateBE" style="margin-top:4px"></div></div>
     </div></div>
   <div class="tabs" id="tabs"></div>
 
@@ -321,9 +321,11 @@ function recompute(){const t=totalsOf(S);
 
 /* ---------- header sync ---------- */
 function sync(){S.year=document.getElementById('year').value;S.owner=document.getElementById('owner').value;S.date=document.getElementById('date').value;return S;}
+function beText(iso){if(!iso)return'';var p=String(iso).split('-');if(p.length!==3)return iso;return p[2]+'/'+p[1]+'/'+(parseInt(p[0],10)+543);}
+function updBE(){var e=document.getElementById('dateBE');if(e)e.textContent=S.date?('= '+beText(S.date)+' (พ.ศ.)'):'';}
 function applyHeader(){document.getElementById('unit').value=S.unit;document.getElementById('curUnit').textContent='หน่วยงาน: '+S.unit;
-  document.getElementById('year').value=S.year;document.getElementById('owner').value=S.owner||'';document.getElementById('date').value=S.date||'';
-  ['year','owner','date'].forEach(id=>document.getElementById(id).oninput=()=>{sync();recompute();});}
+  document.getElementById('year').value=S.year;document.getElementById('owner').value=S.owner||'';document.getElementById('date').value=S.date||'';updBE();
+  ['year','owner','date'].forEach(id=>document.getElementById(id).oninput=()=>{sync();updBE();recompute();});}
 function renderAll(){genTable('stationary','t_stationary');genTable('vehicle','t_vehicle');
   genTable('medgas','t_medgas',{qLabel:'ปริมาณ (kg)'});genTable('refrig','t_refrig',{qLabel:'รั่วซึม (kg)'});elecTable();
   travelTable('travelC','t_travelC','C');travelTable('travelB','t_travelB','B');
@@ -357,7 +359,7 @@ function renderUnitTbl(){const u=LS.units();
 function saveLocal(){if(S.unit){LS.setData(S.unit,sync());cloudSaveUnit(S.unit,S);}alert('บันทึกข้อมูลหน่วยงานเรียบร้อย'+(_db?' (ซิงค์คลาวด์แล้ว)':''));}
 function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();}
 function exportJSON(){sync();dl(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}),(S.unit||'CFO')+'_'+(S.year||'')+'.json');}
-function exportCSV(){sync();const t=totalsOf(S);let rows=[['หน่วยงาน',S.unit],['ปี',S.year],['ผู้รับผิดชอบ',S.owner],[],
+function exportCSV(){sync();const t=totalsOf(S);let rows=[['หน่วยงาน',S.unit],['ปี',S.year],['ผู้รับผิดชอบ',S.owner],['วันที่กรอก (พ.ศ.)',beText(S.date)],[],
   ['หมวด','kgCO2e','tCO2e'],['Scope 1',t.s1.toFixed(2),(t.s1/1000).toFixed(4)],['Scope 2',t.s2.toFixed(2),(t.s2/1000).toFixed(4)],
   ['Scope 3',t.s3.toFixed(2),(t.s3/1000).toFixed(4)],['Carbon Sink',t.sink.toFixed(2),(t.sink/1000).toFixed(4)],['Net',t.net.toFixed(2),(t.net/1000).toFixed(4)]];
   const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+(c==null?'':c)+'"').join(',')).join('\n');dl(new Blob([csv],{type:'text/csv'}),(S.unit||'CFO')+'.csv');}

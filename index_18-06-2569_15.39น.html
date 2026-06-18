@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เครื่องคำนวณคาร์บอนฟุตพริ้นท์องค์กร (CFO) — คณะแพทยศาสตร์ มอ.</title>
+<style>
+:root{--green:#2E7D32;--green2:#1B5E20;--blue:#1565C0;--yellow:#FFF9C4;--gray:#F5F5F5;--res:#C8E6C9;--bd:#cfd8dc;--ink:#1a2327}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Sarabun","Segoe UI",Tahoma,sans-serif;color:var(--ink);background:#eef2f1;font-size:15px}
+header{background:linear-gradient(100deg,var(--green),var(--green2));color:#fff;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+header .logo{font-weight:800;font-size:17px;white-space:nowrap}
+header .sub{opacity:.92;font-size:12px}
+header .who{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+header .badge{background:rgba(255,255,255,.16);padding:6px 12px;border-radius:20px;font-size:13px}
+.wrap{max-width:1180px;margin:0 auto;padding:18px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 14px}
+.tab{padding:9px 14px;border:1px solid var(--bd);background:#fff;border-radius:9px;cursor:pointer;font-weight:600;font-size:14px}
+.tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+.card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px 18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card h2{margin:0 0 4px;color:var(--green2);font-size:18px}
+.card .hint{color:#607d8b;font-size:13px;margin:0 0 12px}
+.sec{display:none}.sec.active{display:block}
+label.fld{display:block;font-size:13px;font-weight:600;margin-bottom:4px;color:#37474f}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+input,select{width:100%;padding:8px 9px;border:1px solid var(--bd);border-radius:8px;font:inherit;background:#fff}
+input.q{background:var(--yellow)}
+table{width:100%;border-collapse:collapse;margin-top:6px}
+th,td{border:1px solid var(--bd);padding:7px 8px;text-align:left;font-size:14px}
+th{background:var(--green);color:#fff;font-weight:600}
+td.calc{background:var(--gray);text-align:right;font-variant-numeric:tabular-nums}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td input{border:none;background:transparent;padding:4px;width:100%}
+td input.q{background:var(--yellow);border:1px solid #e0e0a8;border-radius:6px}
+.itemin{min-width:180px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+.btn.add{background:var(--blue);color:#fff}.btn.del{background:#fff;color:#c62828;border:1px solid #ef9a9a;padding:4px 9px;font-size:13px}
+.btn.ghost{background:#fff;border:1px solid var(--bd)}.btn.green{background:var(--green);color:#fff}
+.btn.sm{padding:6px 10px;font-size:13px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tot{margin-top:10px;text-align:right;font-weight:700;color:var(--green2);font-size:15px;background:var(--res);padding:8px 12px;border-radius:8px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:760px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px;text-align:center}
+.kpi .v{font-size:25px;font-weight:800;color:var(--green2);font-variant-numeric:tabular-nums}
+.kpi .l{font-size:13px;color:#546e7a;margin-top:2px}
+.kpi.s1{border-top:4px solid #2E7D32}.kpi.s2{border-top:4px solid #1565C0}.kpi.s3{border-top:4px solid #f9a825}.kpi.net{border-top:4px solid #6a1b9a}
+.dash{display:grid;grid-template-columns:300px 1fr;gap:16px}
+@media(max-width:760px){.dash{grid-template-columns:1fr}}
+.bar{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}
+.bar .lab{width:140px;flex:none;color:#455a64}
+.bar .track{flex:1;background:#eceff1;border-radius:6px;overflow:hidden;height:18px}
+.bar .fill{height:100%;background:var(--green)}
+.bar .val{width:96px;flex:none;text-align:right;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:8px;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:5px}.dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+footer{color:#607d8b;font-size:12px;text-align:center;padding:18px}
+.note{font-size:12px;color:#78909c;margin-top:8px}
+/* gate */
+.overlay{position:fixed;inset:0;background:linear-gradient(135deg,#e8f5e9,#e3f2fd);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.gate{background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.2);max-width:440px;width:100%;padding:26px}
+.gate h1{font-size:20px;color:var(--green2);margin:0 0 2px}.gate p.s{color:#607d8b;font-size:13px;margin:0 0 16px}
+.gate .row{margin-bottom:12px}
+.gate .link{background:none;border:none;color:var(--blue);cursor:pointer;font:inherit;font-weight:600;padding:0}
+.hide{display:none!important}
+.manage td,.manage th{font-size:13px}
+.rankbar .fill{background:#1565C0}
+.pill{display:inline-block;background:#e8f5e9;color:#2e7d32;border-radius:12px;padding:2px 8px;font-size:12px;font-weight:600}
+@media print{header .who,.tabs,.toolbar,.btn,.tab{display:none!important}.sec{display:block!important}.overlay{display:none!important}}
+</style></head><body>
+
+<!-- ===== LOGIN GATE ===== -->
+<div class="overlay" id="gate">
+  <div class="gate">
+    <h1>🏥 ระบบคาร์บอนฟุตพริ้นท์องค์กร (CFO)</h1>
+    <p class="s">คณะแพทยศาสตร์ มหาวิทยาลัยสงขลานครินทร์ — เวอร์ชันอัปเดต 18/06/2569</p>
+    <div id="gateLogin">
+      <div class="row"><label class="fld">เลือกหน่วยงานของท่าน</label><select id="gUnit"></select></div>
+      <div class="row" id="gPinRow"><label class="fld">รหัสผ่านหน่วยงาน</label><input id="gPin" type="password" placeholder="รหัสผ่านหน่วยงาน"></div>
+      <div class="row"><button class="btn green" style="width:100%" onclick="doLogin()">เข้าสู่ระบบหน่วยงาน →</button></div>
+      <div class="row" style="display:flex;justify-content:space-between">
+        <button class="link" onclick="adminGate('manage')">⚙️ จัดการ/เพิ่มหน่วยงาน</button>
+        <button class="link" onclick="adminGate('admin')">📊 โหมดรวมผลภาพรวมคณะ</button>
+      </div>
+      <p class="note" id="cloudStat" style="text-align:center;margin-top:8px">โหมดออฟไลน์</p>
+    </div>
+    <div id="gateManage" class="hide">
+      <div class="row"><label class="fld">เพิ่มหน่วยงานใหม่</label>
+        <div style="display:flex;gap:6px"><input id="newUnit" placeholder="ชื่อหน่วยงาน"><button class="btn add sm" onclick="addUnit()">เพิ่ม</button></div></div>
+      <div class="row"><label class="fld">ตั้ง/เปลี่ยนรหัสผ่านหน่วยงาน (ไม่บังคับ)</label>
+        <div style="display:flex;gap:6px"><select id="pinUnit" style="flex:1"></select><input id="pinVal" placeholder="รหัส (เว้นว่าง=ลบ)" style="width:130px"><button class="btn ghost sm" onclick="setPinUI()">ตั้ง</button></div></div>
+      <div class="manage" style="max-height:200px;overflow:auto;border:1px solid var(--bd);border-radius:8px"><table id="unitTbl"></table></div>
+      <div class="row" style="margin-top:12px"><button class="link" onclick="hideManage()">← กลับหน้าเข้าสู่ระบบ</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app" class="hide">
+<header>
+  <div><div class="logo">🏥 คณะแพทยศาสตร์ มอ.</div><div class="sub">เครื่องคำนวณ CFO — GHG Protocol / อบก.</div></div>
+  <div class="who">
+    <span class="badge" id="curUnit">หน่วยงาน</span>
+    <span class="badge" id="netBadge">Net: 0.00 tCO₂e</span>
+    <button class="btn ghost sm" onclick="logout()">เปลี่ยน/ออก</button>
+  </div>
+</header>
+<div class="wrap">
+  <div class="card"><h2>ข้อมูลหน่วยงาน</h2>
+    <div class="grid4">
+      <div><label class="fld">ชื่อหน่วยงาน</label><input id="unit" readonly></div>
+      <div><label class="fld">ปีที่รายงาน (พ.ศ.)</label><input id="year" class="q" type="number" value="2568"></div>
+      <div><label class="fld">ผู้รับผิดชอบ</label><input id="owner" class="q" placeholder="ชื่อ-สกุล"></div>
+      <div><label class="fld">วันที่กรอกข้อมูล</label><input id="date" type="date" class="q"><div class="note" id="dateBE" style="margin-top:4px"></div></div>
+    </div></div>
+  <div class="tabs" id="tabs"></div>
+
+  <div class="sec" data-sec="s1">
+    <div class="card"><h2>ขอบเขตที่ 1 — การเผาไหม้แบบอยู่กับที่ (Stationary)</h2><p class="hint">เลือกชนิด (พิมพ์ค้นหาได้) แล้วกรอกปริมาณ — kgCO₂e = ปริมาณ × EF</p><div id="t_stationary"></div></div>
+    <div class="card"><h2>ขอบเขตที่ 1 — การเผาไหม้แบบเคลื่อนที่ (ยานพาหนะ Mobile)</h2><p class="hint">คำนวณตามปริมาณเชื้อเพลิงที่เติม</p><div id="t_vehicle"></div></div>
+    <div class="card"><h2>ขอบเขตที่ 1 — การรั่วไหล: ก๊าซ (ดับเพลิง/Septic/ทางการแพทย์)</h2><p class="hint">รวมการรั่วไหล: สารดับเพลิง CO₂, ก๊าซมีเทน Septic tank (CH₄×28), ก๊าซยาสลบ (Desflurane ฯลฯ) — kgCO₂e = ปริมาณ(kg) × GWP</p><div id="t_medgas"></div></div>
+    <div class="card"><h2>ขอบเขตที่ 1 — การรั่วไหล: สารทำความเย็น (Refrigerants)</h2><p class="hint">กรอกปริมาณรั่วซึม/เติมต่อปี (kg) — kgCO₂e = kg × GWP</p><div id="t_refrig"></div></div>
+  </div>
+  <div class="sec" data-sec="s2">
+    <div class="card"><h2>ขอบเขตที่ 2 — การใช้ไฟฟ้าที่ซื้อ</h2><p class="hint">กรอก kWh รายเดือน — kgCO₂e = kWh × 0.475 (Grid 2022-2024)</p><div id="t_elec"></div></div>
+  </div>
+  <div class="sec" data-sec="s3">
+    <div class="card"><h2>ขอบเขตที่ 3 — Category 7: การเดินทางของพนักงาน (Commuting)</h2><p class="hint">kgCO₂e = คน × ระยะไป-กลับ/วัน × วันทำงาน × EF</p><div id="t_travelC"></div></div>
+    <div class="card"><h2>ขอบเขตที่ 3 — Category 6: การเดินทางเพื่อธุรกิจ (Business Travel)</h2><p class="hint">kgCO₂e = เที่ยว/คน × ระยะรวม × EF</p><div id="t_travelB"></div></div>
+    <div class="card"><h2>ขอบเขตที่ 3 — Category 5: ของเสียจากการดำเนินงาน</h2><p class="hint">เลือกประเภท/วิธีกำจัด แล้วกรอก kg/ปี</p><div id="t_waste"></div></div>
+    <div class="card"><h2>ขอบเขตที่ 3 — Category 1/3: น้ำประปาและน้ำเสีย</h2><p class="hint">เลือกชนิดน้ำ แล้วกรอก ลบ.ม.</p><div id="t_water"></div></div>
+    <div class="card"><h2>ขอบเขตที่ 3 — Category 1: จัดซื้อสินค้าและบริการ (วัสดุ/ยา/กระดาษ)</h2><p class="hint">เลือกวัสดุ (พิมพ์ค้นหาได้) แล้วกรอก kg/ปี</p><div id="t_material"></div></div>
+  </div>
+  <div class="sec" data-sec="sink">
+    <div class="card"><h2>Carbon Sink — พื้นที่สีเขียว</h2><p class="hint">ค่าดูดกลับแสดงเป็นค่าลบ — kgCO₂e = -(จำนวน × ค่าดูดซับ/หน่วย/ปี)</p><div id="t_sink"></div></div>
+  </div>
+  <div class="sec active" data-sec="dash">
+    <div class="card"><h2>สรุปผล — Dashboard หน่วยงาน</h2>
+      <div class="kpis">
+        <div class="kpi s1"><div class="v" id="kS1">0</div><div class="l">Scope 1 (tCO₂e)</div></div>
+        <div class="kpi s2"><div class="v" id="kS2">0</div><div class="l">Scope 2 (tCO₂e)</div></div>
+        <div class="kpi s3"><div class="v" id="kS3">0</div><div class="l">Scope 3 (tCO₂e)</div></div>
+        <div class="kpi net"><div class="v" id="kNet">0</div><div class="l">Net (tCO₂e)</div></div>
+      </div>
+      <div class="note">Gross = S1+S2+S3 | Net = Gross − Carbon Sink | Carbon Sink: <span id="kSink">0</span> tCO₂e</div></div>
+    <div class="card dash">
+      <div><h2 style="font-size:16px">สัดส่วนตาม Scope</h2>
+        <div style="display:flex;justify-content:center"><svg id="donut" width="240" height="240" viewBox="0 0 240 240"></svg></div>
+        <div class="legend"><span><i class="dot" style="background:#2E7D32"></i>Scope 1</span><span><i class="dot" style="background:#1565C0"></i>Scope 2</span><span><i class="dot" style="background:#f9a825"></i>Scope 3</span></div></div>
+      <div><h2 style="font-size:16px">แยกตามกิจกรรม (kgCO₂e)</h2><div id="bars"></div></div></div>
+    <div class="card"><h2 style="font-size:16px">จัดการข้อมูล</h2>
+      <div class="toolbar">
+        <button class="btn green" onclick="saveLocal()">💾 บันทึก</button>
+        <button class="btn ghost" onclick="exportJSON()">⬇️ ส่งออก JSON (ส่งให้ผู้รวมผล)</button>
+        <button class="btn ghost" onclick="exportCSV()">📄 ส่งออก CSV</button>
+        <button class="btn ghost" onclick="window.print()">🖨️ พิมพ์/PDF</button>
+        <button class="btn ghost" onclick="resetUnit()">🗑️ ล้างข้อมูลหน่วยงานนี้</button>
+      </div>
+      <p class="note">ข้อมูลบันทึกอัตโนมัติในเบราว์เซอร์ (แยกตามหน่วยงาน) — ส่ง "ไฟล์ JSON" ให้ผู้ดูแลเพื่อรวมเป็นภาพรวมคณะ</p></div>
+  </div>
+  <footer><b>เวอร์ชันอัปเดต: 18/06/2569</b> &nbsp;|&nbsp; อ้างอิง: TGO Thai National LCI (อบก. CFO ก.พ.2569 / CFP พ.ค.2569) | GHG Protocol Corporate Standard</footer>
+</div></div>
+
+<!-- ===== ADMIN MERGE ===== -->
+<div id="admin" class="hide">
+<header><div><div class="logo">📊 ภาพรวมคณะแพทยศาสตร์ มอ.</div><div class="sub">รวมผลคาร์บอนฟุตพริ้นท์ทุกหน่วยงาน</div></div>
+  <div class="who"><button class="btn ghost sm" onclick="exitAdmin()">← กลับหน้าหลัก</button></div></header>
+<div class="wrap">
+  <div class="card"><h2>นำเข้าข้อมูลหน่วยงาน</h2>
+    <p class="hint">รวมได้ 2 วิธี: (1) นำเข้าไฟล์ JSON ที่แต่ละหน่วยงานส่งมา (เลือกหลายไฟล์พร้อมกันได้) หรือ (2) ใช้ข้อมูลทุกหน่วยงานที่บันทึกในเบราว์เซอร์นี้</p>
+    <div class="toolbar">
+      <button class="btn add" onclick="document.getElementById('mImp').click()">⬆️ นำเข้าไฟล์ JSON (หลายไฟล์)</button>
+      <input id="mImp" type="file" accept="application/json" multiple style="display:none" onchange="mergeFiles(event)">
+      <button class="btn ghost" onclick="loadAllLocal()">🖥️ ใช้ข้อมูลในเครื่องนี้ทั้งหมด</button>
+      <button class="btn ghost" onclick="mergeClear()">ล้างรายการ</button>
+      <button class="btn green" onclick="exportFacultyCSV()">📄 ส่งออกภาพรวม CSV</button>
+    </div><p class="note" id="cloudStat2"></p></div>
+  <div class="card"><h2>ภาพรวมการปล่อย (รวมทุกหน่วยงาน)</h2>
+    <div class="kpis">
+      <div class="kpi s1"><div class="v" id="fS1">0</div><div class="l">Scope 1 (tCO₂e)</div></div>
+      <div class="kpi s2"><div class="v" id="fS2">0</div><div class="l">Scope 2 (tCO₂e)</div></div>
+      <div class="kpi s3"><div class="v" id="fS3">0</div><div class="l">Scope 3 (tCO₂e)</div></div>
+      <div class="kpi net"><div class="v" id="fNet">0</div><div class="l">Net รวม (tCO₂e)</div></div>
+    </div>
+    <div class="note">จำนวนหน่วยงานที่รวม: <span id="fCount">0</span> | Carbon Sink รวม: <span id="fSink">0</span> tCO₂e</div></div>
+  <div class="card dash">
+    <div><h2 style="font-size:16px">สัดส่วน Scope (ภาพรวมคณะ)</h2>
+      <div style="display:flex;justify-content:center"><svg id="fdonut" width="240" height="240" viewBox="0 0 240 240"></svg></div>
+      <div class="legend"><span><i class="dot" style="background:#2E7D32"></i>Scope 1</span><span><i class="dot" style="background:#1565C0"></i>Scope 2</span><span><i class="dot" style="background:#f9a825"></i>Scope 3</span></div></div>
+    <div><h2 style="font-size:16px">Net แยกตามหน่วยงาน (tCO₂e)</h2><div id="fbars"></div></div></div>
+  <div class="card"><h2>ตารางเปรียบเทียบรายหน่วยงาน</h2><div style="overflow:auto"><table id="fTbl"></table></div></div>
+  <div class="card"><h2>วิธีเพิ่ม/รวมหน่วยงาน</h2>
+    <p class="hint" style="line-height:1.7">
+    1) แต่ละหน่วยงานเปิดไฟล์นี้ → เลือกหน่วยงานของตน → กรอกข้อมูล → กดปุ่ม <b>"ส่งออก JSON"</b> แล้วส่งไฟล์ให้ผู้ดูแล<br>
+    2) ผู้ดูแลเข้าหน้านี้ → กด <b>"นำเข้าไฟล์ JSON (หลายไฟล์)"</b> เลือกไฟล์ของทุกหน่วยงานพร้อมกัน → ระบบรวมผลให้อัตโนมัติ<br>
+    3) เพิ่มหน่วยงานใหม่: ที่หน้าเข้าสู่ระบบ กด <b>"⚙️ จัดการ/เพิ่มหน่วยงาน"</b> → พิมพ์ชื่อ → กด "เพิ่ม" (ตั้งรหัสผ่านได้)<br>
+    4) ถ้าทุกคนกรอกบนเครื่อง/เบราว์เซอร์เดียวกัน ใช้ปุ่ม <b>"ใช้ข้อมูลในเครื่องนี้ทั้งหมด"</b> ได้เลย ไม่ต้องส่งไฟล์</p></div>
+</div></div>
+
+<script>
+const EF = {"stationary": [{"l": "ก๊าซธรรมชาติ NG (ลบ.ฟุต/SCF)", "u": "SCF", "ef": 0.0573}, {"l": "ก๊าซธรรมชาติ NG (MJ)", "u": "MJ", "ef": 0.0562}, {"l": "LPG (ลิตร)", "u": "ลิตร", "ef": 1.6812}, {"l": "LPG (กิโลกรัม)", "u": "กก.", "ef": 3.1133}, {"l": "น้ำมันเตา A Fuel Oil A (ลิตร)", "u": "ลิตร", "ef": 3.2198}, {"l": "น้ำมันเตา C Fuel Oil C (ลิตร)", "u": "ลิตร", "ef": 3.2455}, {"l": "น้ำมันดีเซล Diesel (ลิตร)", "u": "ลิตร", "ef": 2.7076}, {"l": "น้ำมันเบนซิน Gasoline (ลิตร)", "u": "ลิตร", "ef": 2.1892}, {"l": "ไบโอดีเซล B100 (ลิตร)", "u": "ลิตร", "ef": 1.6496}, {"l": "ถ่านหินลิกไนต์ Lignite (กก.)", "u": "กก.", "ef": 1.21}, {"l": "ถ่านหินแอนทราไซต์ (กก.)", "u": "กก.", "ef": 3.1079}, {"l": "ถ่านหินบิทูมินัส (กก.)", "u": "กก.", "ef": 2.5125}, {"l": "ฟืน Fuel wood [นับ Scope1] (กก.)", "u": "กก.", "ef": 0.0304}, {"l": "ถ่าน Charcoal [นับ Scope1] (กก.)", "u": "กก.", "ef": 0.0549}, {"l": "แกลบ Paddy husk [นับ Scope1] (กก.)", "u": "กก.", "ef": 0.0274}, {"l": "ชานอ้อย Bagasse [นับ Scope1] (กก.)", "u": "กก.", "ef": 0.0143}, {"l": "ก๊าซชีวภาพ Biogas [นับ Scope1] (ลบ.ม.)", "u": "ลบ.ม.", "ef": 0.0011}], "vehicle": [{"l": "CNG (กก.)", "u": "กก.", "ef": 2.254}, {"l": "LPG (ลิตร)", "u": "ลิตร", "ef": 1.7273}, {"l": "LPG (กิโลกรัม)", "u": "กก.", "ef": 3.1988}, {"l": "ดีเซล Diesel (ลิตร)", "u": "ลิตร", "ef": 2.7403}, {"l": "เบนซิน Motor Gasoline (ลิตร)", "u": "ลิตร", "ef": 2.2373}, {"l": "ไบโอดีเซล B100 (ลิตร)", "u": "ลิตร", "ef": 1.6705}, {"l": "เอทานอล E100 (ลิตร)", "u": "ลิตร", "ef": 1.5074}, {"l": "ดีเซล B7 [นับ Scope1] (ลิตร)", "u": "ลิตร", "ef": 2.5504}, {"l": "ดีเซล B20 [นับ Scope1] (ลิตร)", "u": "ลิตร", "ef": 2.1976}, {"l": "แก๊สโซฮอล์ E10 [นับ Scope1] (ลิตร)", "u": "ลิตร", "ef": 2.0103}, {"l": "แก๊สโซฮอล์ E20 [นับ Scope1] (ลิตร)", "u": "ลิตร", "ef": 1.7881}, {"l": "แก๊สโซฮอล์ E85 [นับ Scope1] (ลิตร)", "u": "ลิตร", "ef": 0.3439}], "medgas": [{"l": "N2O (ไนตรัสออกไซด์)", "u": "กก.", "ef": 265.0}, {"l": "CO2 (ทางการแพทย์)", "u": "กก.", "ef": 1.0}, {"l": "SF6 (ซัลเฟอร์เฮกซะฟลูออไรด์)", "u": "กก.", "ef": 23500.0}, {"l": "Desflurane (ยาสลบ)", "u": "กก.", "ef": 2540.0}, {"l": "Sevoflurane (ยาสลบ)", "u": "กก.", "ef": 130.0}, {"l": "Isoflurane (ยาสลบ)", "u": "กก.", "ef": 510.0}, {"l": "CO2 (สารดับเพลิง/ก๊าซรั่วไหล)", "u": "กก.", "ef": 1.0}, {"l": "CH4 (รั่วไหล/Septic tank)", "u": "กก.", "ef": 28.0}], "refrig": [{"l": "R-22 (HCFC-22)", "u": "กก.", "ef": 1760.0}, {"l": "R-32", "u": "กก.", "ef": 677.0}, {"l": "R-125", "u": "กก.", "ef": 3170.0}, {"l": "R-134", "u": "กก.", "ef": 1120.0}, {"l": "R-134a", "u": "กก.", "ef": 1300.0}, {"l": "R-143", "u": "กก.", "ef": 328.0}, {"l": "R-143a", "u": "กก.", "ef": 4800.0}, {"l": "R-404a", "u": "กก.", "ef": 3942.8}, {"l": "R-407a", "u": "กก.", "ef": 1923.4}, {"l": "R-407C", "u": "กก.", "ef": 1624.21}, {"l": "R-410a", "u": "กก.", "ef": 1923.5}], "travel": [{"l": "รถจักรยานยนต์", "u": "กม.", "ef": 0.0521}, {"l": "รถยนต์ส่วนบุคคล (เบนซิน)", "u": "กม.", "ef": 0.1865}, {"l": "รถยนต์ส่วนบุคคล (ดีเซล)", "u": "กม.", "ef": 0.2113}, {"l": "รถตู้", "u": "กม.", "ef": 0.2683}, {"l": "รถโดยสารประจำทาง", "u": "คน-กม.", "ef": 0.022}, {"l": "รถไฟ", "u": "คน-กม.", "ef": 0.049}, {"l": "เครื่องบินในประเทศ (Short-haul)", "u": "คน-กม.", "ef": 0.1556}, {"l": "เครื่องบินต่างประเทศ (Long-haul)", "u": "คน-กม.", "ef": 0.1095}], "waste": [{"l": "ขยะทั่วไป - ฝังกลบถูกหลักสุขาภิบาล", "u": "กก.", "ef": 0.7933}, {"l": "ขยะทั่วไป - เทกอง (Open dump)", "u": "กก.", "ef": 1.0388}, {"l": "ขยะทั่วไป - ฝังกลบ+ระบบเก็บก๊าซมีเทน", "u": "กก.", "ef": 0.0175}, {"l": "ขยะอินทรีย์ - หมักทำปุ๋ย (Composting)", "u": "กก.", "ef": 0.1102}, {"l": "ขยะ - คัดแยกมูลฝอย", "u": "กก.", "ef": 0.0159}, {"l": "ขยะ - จัดเก็บและรวบรวม", "u": "กก.", "ef": 0.0143}, {"l": "ฝังกลบแยกชนิด: กระดาษ/กระดาษกล่อง", "u": "กก.", "ef": 2.93}, {"l": "ฝังกลบแยกชนิด: ผ้า", "u": "กก.", "ef": 2.0}, {"l": "ฝังกลบแยกชนิด: เศษอาหาร", "u": "กก.", "ef": 2.53}, {"l": "ฝังกลบแยกชนิด: เศษไม้", "u": "กก.", "ef": 3.33}, {"l": "ฝังกลบแยกชนิด: ผ้าอ้อม/กระดาษ", "u": "กก.", "ef": 4.0}, {"l": "ฝังกลบแยกชนิด: ยางและหนัง", "u": "กก.", "ef": 3.13}, {"l": "ขยะติดเชื้อ - เผาอุณหภูมิสูง", "u": "กก.", "ef": 3.39}], "water": [{"l": "น้ำประปา (กปภ./PWA)", "u": "ลบ.ม.", "ef": 0.541}, {"l": "น้ำประปา (กปน./MWA)", "u": "ลบ.ม.", "ef": 0.7948}, {"l": "น้ำประปา (นิคมอุตสาหกรรม)", "u": "ลบ.ม.", "ef": 0.2575}, {"l": "น้ำอ่อนสำหรับหม้อไอน้ำ", "u": "ลบ.ม.", "ef": 1.0301}, {"l": "น้ำเสีย (รวบรวม+บำบัด ระดับประเทศ)", "u": "ลบ.ม.", "ef": 0.1302}], "material": [{"l": "พลาสติก ABS", "u": "กก.", "ef": 4.5845}, {"l": "พลาสติก GPPS (โพลีสไตรีน)", "u": "กก.", "ef": 2.1815}, {"l": "พลาสติก HDPE", "u": "กก.", "ef": 2.4664}, {"l": "พลาสติก HIPS", "u": "กก.", "ef": 3.393}, {"l": "พลาสติก LLDPE", "u": "กก.", "ef": 2.3995}, {"l": "พลาสติก LDPE", "u": "กก.", "ef": 2.4345}, {"l": "พลาสติก PP (โพลีโพรพิลีน)", "u": "กก.", "ef": 2.0366}, {"l": "พลาสติก PVC", "u": "กก.", "ef": 3.0658}, {"l": "พลาสติก PET", "u": "กก.", "ef": 2.9389}, {"l": "กระดาษพิมพ์เขียน", "u": "กก.", "ef": 2.102}, {"l": "กระดาษหนังสือพิมพ์", "u": "กก.", "ef": 1.3589}, {"l": "กระดาษคราฟท์ (ทำผิวกล่อง)", "u": "กก.", "ef": 1.6324}, {"l": "กระดาษกล่องขาวเคลือบแป้ง", "u": "กก.", "ef": 1.8679}, {"l": "แก้ว - ขวดแก้วใส", "u": "กก.", "ef": 0.8075}, {"l": "แก้ว - ขวดแก้วสีชา", "u": "กก.", "ef": 0.8305}, {"l": "แก้ว - กระจกแผ่นเรียบ", "u": "กก.", "ef": 1.2709}, {"l": "ยาง - ยางก้อนถ้วย (DRC 55%)", "u": "กก.", "ef": 0.0494}, {"l": "ยาง - น้ำยางข้น (DRC 60%)", "u": "กก.", "ef": 0.1787}, {"l": "ยาง - ยางสกิม", "u": "กก.", "ef": 0.3443}, {"l": "ยาง - ยางแท่ง STR 10/20", "u": "กก.", "ef": 0.2479}], "sink": [{"l": "ต้นไม้ใหญ่ (ต้น)", "u": "ต้น/ปี", "ef": 9.5}, {"l": "ไม้ยืนต้นขนาดกลาง (ต้น)", "u": "ต้น/ปี", "ef": 5.0}, {"l": "ไม้พุ่ม/ต้นเล็ก (ต้น)", "u": "ต้น/ปี", "ef": 2.0}, {"l": "พื้นที่ป่า/สวนป่า (ไร่)", "u": "ไร่/ปี", "ef": 7000.0}]};
+const DEFAULT_UNITS = ["สาขาวิชาชีวเวชศาสตร์และวิศวกรรมชีวการแพทย์", "สาขาวิชาอายุรศาสตร์", "สาขาวิชาออร์โธปิดิกส์", "สาขาวิชาโสต ศอ นาสิกวิทยา", "สาขาวิชาจักษุวิทยา", "สาขาวิชากุมารเวชศาสตร์", "สาขาวิชาจิตเวชศาสตร์", "สาขาวิชาเวชศาสตร์ฉุกเฉิน", "สาขาวิชารังสีวิทยา", "สาขาวิชาระบาดวิทยา", "สาขาสูติศาสตร์และนรีเวชวิทยา", "สาขาวิชาเวชศาสตร์ฟื้นฟู", "สาขาวิชากายภาพบำบัด", "สาขาวิชาพยาธิวิทยา", "สาขาวิชาวิสัญญีวิทยา", "สาขาวิชาการวิจัยทางคลินิกและวิทยาการข้อมูลทางการแพทย์", "สาขาวิชาศัลยศาสตร์", "สาขาวิชาเวชศาสตร์ครอบครัวและเวชศาสตร์ป้องกัน", "งานแผนและประเมินผล", "งานผู้ป่วยนอก (OPD)", "งานผู้ป่วยใน (IPD)", "ห้องผ่าตัด (OR)", "ห้องคลอด (LR)", "หอผู้ป่วยวิกฤต (ICU)", "ห้องปฏิบัติการ (Lab)", "รังสีวิทยา", "เภสัชกรรม", "โภชนาการ", "งานซักฟอก", "งานวิศวกรรมและสิ่งแวดล้อม", "งานสิ่งแวดล้อม"];
+const UNIT_PINS = {"สาขาวิชาชีวเวชศาสตร์และวิศวกรรมชีวการแพทย์": "1743", "สาขาวิชาอายุรศาสตร์": "1454", "สาขาวิชาออร์โธปิดิกส์": "161102", "สาขาวิชาโสต ศอ นาสิกวิทยา": "1390-1391", "สาขาวิชาจักษุวิทยา": "1380", "สาขาวิชากุมารเวชศาสตร์": "1253", "สาขาวิชาจิตเวชศาสตร์": "1353", "สาขาวิชาเวชศาสตร์ฉุกเฉิน": "170340", "สาขาวิชารังสีวิทยา": "1500", "สาขาวิชาระบาดวิทยา": "1165", "สาขาสูติศาสตร์และนรีเวชวิทยา": "1203", "สาขาวิชาเวชศาสตร์ฟื้นฟู": "161101", "สาขาวิชากายภาพบำบัด": "161131", "สาขาวิชาพยาธิวิทยา": "1551", "สาขาวิชาวิสัญญีวิทยา": "1651", "สาขาวิชาการวิจัยทางคลินิกและวิทยาการข้อมูลทางการแพทย์": "118231", "สาขาวิชาศัลยศาสตร์": "1403", "สาขาวิชาเวชศาสตร์ครอบครัวและเวชศาสตร์ป้องกัน": "1331"};
+const ADMIN_CODE = "49780";
+const ELEC = 0.475;
+const MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const fmt = n => (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt0 = n => (n||0).toLocaleString('en-US',{maximumFractionDigits:0});
+const fmt4 = n => (n||0).toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4});
+
+/* ---------- storage ---------- */
+const LS={
+ units(){try{return JSON.parse(localStorage.getItem('cfo_units'))||DEFAULT_UNITS.slice()}catch(e){return DEFAULT_UNITS.slice()}},
+ setUnits(a){try{localStorage.setItem('cfo_units',JSON.stringify(a))}catch(e){}},
+ pin(n){try{return localStorage.getItem('cfo_pin::'+n)||''}catch(e){return ''}},
+ setPin(n,p){try{p?localStorage.setItem('cfo_pin::'+n,p):localStorage.removeItem('cfo_pin::'+n)}catch(e){}},
+ data(n){try{return JSON.parse(localStorage.getItem('cfo_data::'+n))}catch(e){return null}},
+ setData(n,s){try{localStorage.setItem('cfo_data::'+n,JSON.stringify(s))}catch(e){}},
+ delData(n){try{localStorage.removeItem('cfo_data::'+n)}catch(e){}},
+ allData(){const o={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);
+   if(k.indexOf('cfo_data::')===0){try{o[k.slice(10)]=JSON.parse(localStorage.getItem(k))}catch(e){}}}}catch(e){}return o},
+ current(){try{return localStorage.getItem('cfo_current')||''}catch(e){return ''}},
+ setCurrent(n){try{n?localStorage.setItem('cfo_current',n):localStorage.removeItem('cfo_current')}catch(e){}}
+};
+
+/* ---------- state ---------- */
+let S = blank("");
+function blank(unit){return{unit:unit,year:2568,owner:"",date:"",
+  stationary:[],vehicle:[],medgas:[],refrig:[],elec:Array(12).fill(0),
+  travelC:[],travelB:[],waste:[],water:[],material:[],sink:[]};}
+function efOf(cat,label){const f=(EF[cat]||[]).find(x=>x.l===label);return f||null;}
+
+/* ---------- pure totals (any state) ---------- */
+function catTotalOf(s,cat){return (s[cat]||[]).reduce((a,r)=>{const f=efOf(cat,r.item);const ef=f?f.ef:0;
+  let v=(parseFloat(r.qty)||0)*ef;if(cat==='sink')v=-v;return a+v;},0);}
+function travelTotalOf(s,cat,mode){return (s[cat]||[]).reduce((a,r)=>{const f=efOf('travel',r.item);const ef=f?f.ef:0;
+  const v=mode==='C'?(parseFloat(r.persons)||0)*(parseFloat(r.dist)||0)*(parseFloat(r.days)||0)*ef
+                    :(parseFloat(r.trips)||0)*(parseFloat(r.dist)||0)*ef;return a+v;},0);}
+function elecTotalOf(s){return (s.elec||[]).reduce((a,b)=>a+(+b||0),0)*ELEC;}
+function totalsOf(s){
+  const s1=catTotalOf(s,'stationary')+catTotalOf(s,'vehicle')+catTotalOf(s,'medgas')+catTotalOf(s,'refrig');
+  const s2=elecTotalOf(s);
+  const s3=travelTotalOf(s,'travelC','C')+travelTotalOf(s,'travelB','B')+catTotalOf(s,'waste')+catTotalOf(s,'water')+catTotalOf(s,'material');
+  const sink=catTotalOf(s,'sink');return{s1,s2,s3,gross:s1+s2+s3,sink,net:s1+s2+s3+sink};}
+const catTotal=cat=>catTotalOf(S,cat);
+const travelTotal=(cat,mode)=>travelTotalOf(S,cat,mode);
+const elecTotal=()=>elecTotalOf(S);
+
+/* ---------- datalists ---------- */
+function buildDatalists(){let h="";for(const k in EF){h+=`<datalist id="dl_${k}">`+EF[k].map(x=>`<option value="${x.l}">`).join('')+`</datalist>`;}
+  const d=document.createElement('div');d.style.display='none';d.innerHTML=h;document.body.appendChild(d);}
+
+/* ---------- tabs ---------- */
+const TABS=[["dash","📊 สรุปผล"],["s1","ขอบเขต 1"],["s2","ขอบเขต 2"],["s3","ขอบเขต 3"],["sink","Carbon Sink"]];
+function buildTabs(){const t=document.getElementById('tabs');
+  t.innerHTML=TABS.map(([k,l])=>`<div class="tab${k==='dash'?' active':''}" data-t="${k}">${l}</div>`).join('');
+  t.querySelectorAll('.tab').forEach(el=>el.onclick=()=>{t.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');
+    document.querySelectorAll('#app .sec').forEach(s=>s.classList.toggle('active',s.dataset.sec===el.dataset.t));
+    if(el.dataset.t==='dash')recompute();});}
+
+/* ---------- generic table ---------- */
+function genTable(cat,elId,opt){opt=opt||{};const qLabel=opt.qLabel||"ปริมาณ";const el=document.getElementById(elId);
+  function render(){const rows=S[cat];
+    let h=`<table><thead><tr><th style="width:34px">#</th><th>รายการ (พิมพ์ค้นหา)</th><th style="width:120px">${qLabel}</th><th style="width:66px">หน่วย</th><th style="width:104px">EF/GWP</th><th style="width:120px">kgCO₂e</th><th style="width:42px"></th></tr></thead><tbody>`;
+    rows.forEach((r,i)=>{const f=efOf(cat,r.item);const ef=f?f.ef:0;const unit=f?f.u:'';let val=(parseFloat(r.qty)||0)*ef;if(cat==='sink')val=-val;
+      h+=`<tr><td>${i+1}</td><td><input class="itemin" list="dl_${cat}" value="${r.item||''}" data-i="${i}" data-f="item" placeholder="พิมพ์เพื่อค้นหา..."></td>
+        <td><input class="q" type="number" step="any" value="${r.qty??''}" data-i="${i}" data-f="qty"></td>
+        <td>${unit}</td><td class="num">${f?fmt4(ef):''}</td><td class="calc">${r.item?fmt(val):''}</td>
+        <td><button class="btn del" data-del="${i}">✕</button></td></tr>`;});
+    h+=`</tbody></table><div class="toolbar"><button class="btn add" data-add>+ เพิ่มแถว</button></div><div class="tot">รวม: ${fmt(catTotal(cat))} kgCO₂e</div>`;
+    el.innerHTML=h;
+    el.querySelector('[data-add]').onclick=()=>{rows.push({item:'',qty:''});render();};
+    el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{rows.splice(+b.dataset.del,1);render();recompute();});
+    el.querySelectorAll('input[data-f]').forEach(inp=>inp.oninput=()=>{const i=+inp.dataset.i,f=inp.dataset.f;rows[i][f]=inp.value;soft();recompute();});
+    function soft(){const trs=el.querySelectorAll('tbody tr');rows.forEach((r,i)=>{const f=efOf(cat,r.item);const ef=f?f.ef:0;let val=(parseFloat(r.qty)||0)*ef;if(cat==='sink')val=-val;
+      const td=trs[i].querySelectorAll('td');td[3].textContent=f?f.u:'';td[4].textContent=f?fmt4(ef):'';td[5].textContent=r.item?fmt(val):'';});
+      el.querySelector('.tot').textContent='รวม: '+fmt(catTotal(cat))+' kgCO₂e';}}
+  render();}
+
+/* ---------- travel ---------- */
+function travelTable(cat,elId,mode){const el=document.getElementById(elId);
+  function render(){const rows=S[cat];
+    const cols=mode==='C'?`<th>ประเภท (พิมพ์ค้นหา)</th><th style="width:84px">คน</th><th style="width:120px">ระยะ/วัน(กม.)</th><th style="width:100px">วันทำงาน</th>`
+                         :`<th>ประเภท (พิมพ์ค้นหา)</th><th style="width:100px">เที่ยว/คน</th><th style="width:130px">ระยะรวม(กม.)</th>`;
+    let h=`<table><thead><tr><th style="width:32px">#</th>${cols}<th style="width:96px">EF</th><th style="width:116px">kgCO₂e</th><th style="width:40px"></th></tr></thead><tbody>`;
+    rows.forEach((r,i)=>{const f=efOf('travel',r.item);const ef=f?f.ef:0;
+      const val=mode==='C'?(parseFloat(r.persons)||0)*(parseFloat(r.dist)||0)*(parseFloat(r.days)||0)*ef:(parseFloat(r.trips)||0)*(parseFloat(r.dist)||0)*ef;
+      const mid=mode==='C'?`<td><input class="q" type="number" step="any" value="${r.persons??''}" data-i="${i}" data-f="persons"></td><td><input class="q" type="number" step="any" value="${r.dist??''}" data-i="${i}" data-f="dist"></td><td><input class="q" type="number" step="any" value="${r.days??''}" data-i="${i}" data-f="days"></td>`
+                          :`<td><input class="q" type="number" step="any" value="${r.trips??''}" data-i="${i}" data-f="trips"></td><td><input class="q" type="number" step="any" value="${r.dist??''}" data-i="${i}" data-f="dist"></td>`;
+      h+=`<tr><td>${i+1}</td><td><input class="itemin" list="dl_travel" value="${r.item||''}" data-i="${i}" data-f="item" placeholder="พิมพ์เพื่อค้นหา..."></td>${mid}<td class="num">${f?fmt4(ef):''}</td><td class="calc">${r.item?fmt(val):''}</td><td><button class="btn del" data-del="${i}">✕</button></td></tr>`;});
+    h+=`</tbody></table><div class="toolbar"><button class="btn add" data-add>+ เพิ่มแถว</button></div><div class="tot">รวม: ${fmt(travelTotal(cat,mode))} kgCO₂e</div>`;
+    el.innerHTML=h;
+    el.querySelector('[data-add]').onclick=()=>{rows.push({item:''});render();};
+    el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{rows.splice(+b.dataset.del,1);render();recompute();});
+    el.querySelectorAll('input[data-f]').forEach(inp=>inp.oninput=()=>{rows[+inp.dataset.i][inp.dataset.f]=inp.value;render();recompute();});}
+  render();}
+
+
+/* ---------- electricity ---------- */
+function elecTable(){const el=document.getElementById('t_elec');
+  let h=`<table><thead><tr><th>เดือน</th><th style="width:160px">kWh</th><th style="width:160px">kgCO₂e</th></tr></thead><tbody>`;
+  MONTHS.forEach((m,i)=>{h+=`<tr><td>${m}</td><td><input class="q" type="number" step="any" value="${S.elec[i]||''}" data-m="${i}"></td><td class="calc" id="ec${i}">${fmt((S.elec[i]||0)*ELEC)}</td></tr>`;});
+  h+=`<tr><th>รวมทั้งปี</th><th class="num" id="ecsumk"></th><th class="num" id="ecsum"></th></tr></tbody></table>`;el.innerHTML=h;
+  el.querySelectorAll('input[data-m]').forEach(inp=>inp.oninput=()=>{S.elec[+inp.dataset.m]=parseFloat(inp.value)||0;
+    document.getElementById('ec'+inp.dataset.m).textContent=fmt(S.elec[+inp.dataset.m]*ELEC);elecSums();recompute();});elecSums();}
+function elecSums(){const k=S.elec.reduce((a,b)=>a+(+b||0),0);const ek=document.getElementById('ecsumk'),es=document.getElementById('ecsum');
+  if(ek)ek.textContent=fmt0(k)+' kWh';if(es)es.textContent=fmt(k*ELEC);}
+
+/* ---------- dashboard ---------- */
+function donutInto(id,parts){const tot=parts.reduce((s,p)=>s+p[0],0);const R=90,C=2*Math.PI*R;let off=0;
+  let svg=`<circle cx="120" cy="120" r="${R}" fill="none" stroke="#eceff1" stroke-width="34"/>`;
+  if(tot>0)parts.forEach(([v,c])=>{const len=C*v/tot;svg+=`<circle cx="120" cy="120" r="${R}" fill="none" stroke="${c}" stroke-width="34" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 120 120)"/>`;off+=len;});
+  svg+=`<text x="120" y="114" text-anchor="middle" font-size="14" fill="#607d8b">รวม (tCO₂e)</text><text x="120" y="140" text-anchor="middle" font-size="23" font-weight="800" fill="#1B5E20">${fmt(tot/1000)}</text>`;
+  document.getElementById(id).innerHTML=svg;}
+function recompute(){const t=totalsOf(S);
+  document.getElementById('kS1').textContent=fmt(t.s1/1000);document.getElementById('kS2').textContent=fmt(t.s2/1000);
+  document.getElementById('kS3').textContent=fmt(t.s3/1000);document.getElementById('kNet').textContent=fmt(t.net/1000);
+  document.getElementById('kSink').textContent=fmt(t.sink/1000);document.getElementById('netBadge').textContent='Net: '+fmt(t.net/1000)+' tCO₂e';
+  donutInto('donut',[[t.s1,'#2E7D32'],[t.s2,'#1565C0'],[t.s3,'#f9a825']]);
+  const acts=[["เชื้อเพลิงอยู่กับที่",catTotal('stationary')],["ยานพาหนะ",catTotal('vehicle')],["ก๊าซการแพทย์",catTotal('medgas')],["สารทำความเย็น",catTotal('refrig')],["ไฟฟ้า",elecTotal()],["เดินทาง-บุคลากร",travelTotal('travelC','C')],["เดินทาง-ธุรกิจ",travelTotal('travelB','B')],["ของเสีย",catTotal('waste')],["น้ำ/น้ำเสีย",catTotal('water')],["วัสดุ",catTotal('material')]];
+  const mx=Math.max(1,...acts.map(a=>a[1]));
+  document.getElementById('bars').innerHTML=acts.map(a=>`<div class="bar"><span class="lab">${a[0]}</span><span class="track"><span class="fill" style="width:${100*a[1]/mx}%"></span></span><span class="val">${fmt(a[1])}</span></div>`).join('');
+  if(S.unit)LS.setData(S.unit,sync());cloudQueue();}
+
+/* ---------- header sync ---------- */
+function sync(){S.year=document.getElementById('year').value;S.owner=document.getElementById('owner').value;S.date=document.getElementById('date').value;return S;}
+function beText(iso){if(!iso)return'';var p=String(iso).split('-');if(p.length!==3)return iso;return p[2]+'/'+p[1]+'/'+(parseInt(p[0],10)+543);}
+function updBE(){var e=document.getElementById('dateBE');if(e)e.textContent=S.date?('= '+beText(S.date)+' (พ.ศ.)'):'';}
+function applyHeader(){document.getElementById('unit').value=S.unit;document.getElementById('curUnit').textContent='หน่วยงาน: '+S.unit;
+  document.getElementById('year').value=S.year;document.getElementById('owner').value=S.owner||'';document.getElementById('date').value=S.date||'';updBE();
+  ['year','owner','date'].forEach(id=>document.getElementById(id).oninput=()=>{sync();updBE();recompute();});}
+function renderAll(){genTable('stationary','t_stationary');genTable('vehicle','t_vehicle');
+  genTable('medgas','t_medgas',{qLabel:'ปริมาณ (kg)'});genTable('refrig','t_refrig',{qLabel:'รั่วซึม (kg)'});elecTable();
+  travelTable('travelC','t_travelC','C');travelTable('travelB','t_travelB','B');
+  genTable('waste','t_waste',{qLabel:'ปริมาณ (kg)'});genTable('water','t_water',{qLabel:'ปริมาณ (ลบ.ม.)'});
+  genTable('material','t_material',{qLabel:'ปริมาณ (kg)'});genTable('sink','t_sink',{qLabel:'จำนวน'});}
+
+/* ---------- login / gate ---------- */
+function fillUnitSelect(){const u=LS.units();
+  document.getElementById('gUnit').innerHTML=u.map(x=>`<option>${x}</option>`).join('');
+  const pu=document.getElementById('pinUnit');if(pu)pu.innerHTML=u.map(x=>`<option>${x}</option>`).join('');}
+function pinOf(n){return (LS.pin(n)||UNIT_PINS[n]||'');}
+function adminGate(which){var c=prompt('ใส่รหัสผู้ดูแลระบบเพื่อเข้าเมนูนี้');if(c===null)return;if(c!==ADMIN_CODE){alert('รหัสผู้ดูแลไม่ถูกต้อง');return;}if(which==='manage')showManage();else enterAdmin();}
+function doLogin(){const name=document.getElementById('gUnit').value;const pin=pinOf(name);
+  if(pin && document.getElementById('gPin').value!==pin){alert('รหัสผ่านไม่ถูกต้อง');return;}
+  openUnit(name);}
+function openUnit(name){S=Object.assign(blank(name),LS.data(name)||{});S.unit=name;LS.setCurrent(name);
+  document.getElementById('gate').classList.add('hide');document.getElementById('admin').classList.add('hide');
+  document.getElementById('app').classList.remove('hide');applyHeader();renderAll();recompute();}
+function logout(){if(S.unit)LS.setData(S.unit,sync());LS.setCurrent('');document.getElementById('app').classList.add('hide');
+  fillUnitSelect();document.getElementById('gate').classList.remove('hide');}
+function showManage(){fillUnitSelect();renderUnitTbl();document.getElementById('gateLogin').classList.add('hide');document.getElementById('gateManage').classList.remove('hide');}
+function hideManage(){document.getElementById('gateManage').classList.add('hide');document.getElementById('gateLogin').classList.remove('hide');fillUnitSelect();}
+function addUnit(){const v=document.getElementById('newUnit').value.trim();if(!v)return;const u=LS.units();
+  if(u.includes(v)){alert('มีหน่วยงานนี้แล้ว');return;}u.push(v);LS.setUnits(u);document.getElementById('newUnit').value='';fillUnitSelect();renderUnitTbl();}
+function delUnit(n){if(!confirm('ลบหน่วยงาน "'+n+'" และข้อมูลทั้งหมด?'))return;const u=LS.units().filter(x=>x!==n);LS.setUnits(u);LS.delData(n);LS.setPin(n,'');fillUnitSelect();renderUnitTbl();}
+function setPinUI(){const n=document.getElementById('pinUnit').value;LS.setPin(n,document.getElementById('pinVal').value.trim());document.getElementById('pinVal').value='';renderUnitTbl();alert('ตั้งรหัสผ่านเรียบร้อย');}
+function renderUnitTbl(){const u=LS.units();
+  document.getElementById('unitTbl').innerHTML='<thead><tr><th>หน่วยงาน</th><th style="width:60px">รหัส</th><th style="width:90px">ข้อมูล</th><th style="width:46px"></th></tr></thead><tbody>'+
+    u.map(n=>{const has=LS.data(n);const t=has?totalsOf(has):null;
+      return `<tr><td>${n}</td><td>${pinOf(n)?'🔒':'-'}</td><td class="num">${t?fmt(t.net/1000)+' t':'-'}</td><td><button class="btn del" onclick="delUnit('${n.replace(/'/g,"\\'")}')">✕</button></td></tr>`;}).join('')+'</tbody>';}
+
+/* ---------- export / import (unit) ---------- */
+function saveLocal(){if(S.unit){LS.setData(S.unit,sync());cloudSaveUnit(S.unit,S);}alert('บันทึกข้อมูลหน่วยงานเรียบร้อย'+(_db?' (ซิงค์คลาวด์แล้ว)':''));}
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();}
+function exportJSON(){sync();dl(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}),(S.unit||'CFO')+'_'+(S.year||'')+'.json');}
+function exportCSV(){sync();const t=totalsOf(S);let rows=[['หน่วยงาน',S.unit],['ปี',S.year],['ผู้รับผิดชอบ',S.owner],['วันที่กรอก (พ.ศ.)',beText(S.date)],[],
+  ['หมวด','kgCO2e','tCO2e'],['Scope 1',t.s1.toFixed(2),(t.s1/1000).toFixed(4)],['Scope 2',t.s2.toFixed(2),(t.s2/1000).toFixed(4)],
+  ['Scope 3',t.s3.toFixed(2),(t.s3/1000).toFixed(4)],['Carbon Sink',t.sink.toFixed(2),(t.sink/1000).toFixed(4)],['Net',t.net.toFixed(2),(t.net/1000).toFixed(4)]];
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+(c==null?'':c)+'"').join(',')).join('\n');dl(new Blob([csv],{type:'text/csv'}),(S.unit||'CFO')+'.csv');}
+function resetUnit(){if(confirm('ล้างข้อมูลหน่วยงานนี้?')){const n=S.unit;S=blank(n);LS.setData(n,S);applyHeader();renderAll();recompute();}}
+
+/* ---------- admin merge ---------- */
+let MERGE={};
+function enterAdmin(){MERGE={};document.getElementById('gate').classList.add('hide');document.getElementById('admin').classList.remove('hide');renderFaculty();}
+function exitAdmin(){document.getElementById('admin').classList.add('hide');fillUnitSelect();document.getElementById('gate').classList.remove('hide');}
+function mergeClear(){MERGE={};renderFaculty();}
+function mergeFiles(ev){const fs=ev.target.files;let left=fs.length;if(!left)return;
+  Array.from(fs).forEach(f=>{const r=new FileReader();r.onload=()=>{try{const s=JSON.parse(r.result);const nm=s.unit||f.name.replace(/\.json$/i,'');MERGE[nm]=s;}catch(e){}
+    if(--left===0)renderFaculty();};r.readAsText(f);});ev.target.value='';}
+function loadAllLocal(){const all=LS.allData();MERGE=Object.assign({},MERGE,all);renderFaculty();}
+function renderFaculty(){const names=Object.keys(MERGE);let S1=0,S2=0,S3=0,SK=0;const rowsT=[];
+  names.forEach(n=>{const t=totalsOf(MERGE[n]);S1+=t.s1;S2+=t.s2;S3+=t.s3;SK+=t.sink;rowsT.push([n,t]);});
+  const net=S1+S2+S3+SK;
+  document.getElementById('fS1').textContent=fmt(S1/1000);document.getElementById('fS2').textContent=fmt(S2/1000);
+  document.getElementById('fS3').textContent=fmt(S3/1000);document.getElementById('fNet').textContent=fmt(net/1000);
+  document.getElementById('fSink').textContent=fmt(SK/1000);document.getElementById('fCount').textContent=names.length;
+  donutInto('fdonut',[[S1,'#2E7D32'],[S2,'#1565C0'],[S3,'#f9a825']]);
+  rowsT.sort((a,b)=>b[1].net-a[1].net);
+  const mx=Math.max(1,...rowsT.map(r=>r[1].net));
+  document.getElementById('fbars').innerHTML=rowsT.map(([n,t])=>`<div class="bar"><span class="lab" title="${n}">${n.length>16?n.slice(0,15)+'…':n}</span><span class="track"><span class="fill" style="width:${100*Math.max(0,t.net)/mx}%;background:#1565C0"></span></span><span class="val">${fmt(t.net/1000)}</span></div>`).join('')||'<p class="note">ยังไม่มีข้อมูล นำเข้าไฟล์ JSON หรือกด "ใช้ข้อมูลในเครื่องนี้"</p>';
+  document.getElementById('fTbl').innerHTML='<thead><tr><th>หน่วยงาน</th><th>ปี</th><th class="num">Scope1</th><th class="num">Scope2</th><th class="num">Scope3</th><th class="num">Sink</th><th class="num">Net (tCO₂e)</th></tr></thead><tbody>'+
+    rowsT.map(([n,t])=>`<tr><td>${n}</td><td>${MERGE[n].year||''}</td><td class="num">${fmt(t.s1/1000)}</td><td class="num">${fmt(t.s2/1000)}</td><td class="num">${fmt(t.s3/1000)}</td><td class="num">${fmt(t.sink/1000)}</td><td class="num"><b>${fmt(t.net/1000)}</b></td></tr>`).join('')+
+    `<tr style="background:var(--res);font-weight:700"><td>รวมคณะ</td><td></td><td class="num">${fmt(S1/1000)}</td><td class="num">${fmt(S2/1000)}</td><td class="num">${fmt(S3/1000)}</td><td class="num">${fmt(SK/1000)}</td><td class="num">${fmt(net/1000)}</td></tr></tbody>`;}
+function exportFacultyCSV(){const names=Object.keys(MERGE);let rows=[['ภาพรวมคณะแพทยศาสตร์ มอ.'],[],['หน่วยงาน','ปี','Scope1(t)','Scope2(t)','Scope3(t)','Sink(t)','Net(t)']];
+  let S1=0,S2=0,S3=0,SK=0;names.forEach(n=>{const t=totalsOf(MERGE[n]);S1+=t.s1;S2+=t.s2;S3+=t.s3;SK+=t.sink;
+    rows.push([n,MERGE[n].year||'',(t.s1/1000).toFixed(4),(t.s2/1000).toFixed(4),(t.s3/1000).toFixed(4),(t.sink/1000).toFixed(4),(t.net/1000).toFixed(4)]);});
+  rows.push(['รวมคณะ','',(S1/1000).toFixed(4),(S2/1000).toFixed(4),(S3/1000).toFixed(4),(SK/1000).toFixed(4),((S1+S2+S3+SK)/1000).toFixed(4)]);
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+(c==null?'':c)+'"').join(',')).join('\n');dl(new Blob([csv],{type:'text/csv'}),'faculty_CFO.csv');}
+
+/* ---------- cloud sync (Firebase Firestore) ---------- */
+/* เปิดใช้คลาวด์: สร้างโปรเจกต์ Firebase (ฟรี) -> เปิด Firestore -> วางค่า firebaseConfig แทน null ด้านล่าง (ดูวิธีใน README) */
+const FIREBASE_CONFIG = null;
+let _db=null,_fb=null,_cloudTimer=null;
+function cloudBadge(t,c){const e=document.getElementById('cloudStat');if(e){e.textContent=t;if(c)e.style.color=c;}
+  const e2=document.getElementById('cloudStat2');if(e2){e2.textContent=t;if(c)e2.style.color=c;}}
+async function cloudInit(){
+  if(!FIREBASE_CONFIG||!FIREBASE_CONFIG.apiKey){cloudBadge('โหมดออฟไลน์ (ยังไม่ตั้งค่าคลาวด์)','#90a4ae');return false;}
+  try{
+    const A=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    const F=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    _fb=F;_db=F.getFirestore(A.initializeApp(FIREBASE_CONFIG));
+    cloudBadge('☁️ เชื่อมคลาวด์แล้ว','#2e7d32');injectCloudBtn();return true;
+  }catch(e){cloudBadge('☁️ เชื่อมคลาวด์ไม่สำเร็จ','#c62828');return false;}
+}
+async function cloudSaveUnit(name,state){if(!_db||!name)return;try{await _fb.setDoc(_fb.doc(_db,'cfo_units',name),{data:JSON.stringify(state),unit:name,year:String(state.year||''),updated:Date.now()});}catch(e){}}
+function cloudQueue(){if(!_db||!S.unit)return;clearTimeout(_cloudTimer);_cloudTimer=setTimeout(()=>{cloudSaveUnit(S.unit,sync());},2500);}
+async function cloudLoadAll(){const out={};if(!_db)return out;try{const snap=await _fb.getDocs(_fb.collection(_db,'cfo_units'));snap.forEach(d=>{try{out[d.id]=JSON.parse(d.data().data);}catch(e){}});}catch(e){}return out;}
+async function cloudPull(){cloudBadge('☁️ กำลังดึงข้อมูล...','#1565c0');const all=await cloudLoadAll();MERGE=Object.assign({},MERGE,all);renderFaculty();cloudBadge('☁️ ดึงจากคลาวด์แล้ว ('+Object.keys(all).length+' หน่วยงาน)','#2e7d32');}
+function injectCloudBtn(){const tb=document.querySelector('#admin .toolbar');if(tb&&!document.getElementById('btnCloudPull')){const b=document.createElement('button');b.id='btnCloudPull';b.className='btn green';b.textContent='☁️ ดึงข้อมูลจากคลาวด์ (ทุกหน่วยงาน)';b.onclick=cloudPull;tb.insertBefore(b,tb.firstChild);}}
+
+/* ---------- init ---------- */
+buildDatalists();buildTabs();fillUnitSelect();cloudInit();
+const cur=LS.current();
+if(cur && LS.units().includes(cur)){openUnit(cur);}
+</script>
+</body></html>

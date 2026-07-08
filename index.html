@@ -177,6 +177,7 @@ body.sc-before .kpi.net{border-top-color:#EF6C00}
             <div style="text-align:center"><div class="note">หลังลด</div><svg id="donutAfter" width="160" height="160" viewBox="0 0 240 240"></svg></div></div></div>
         <div><h2 style="font-size:15px">Net รายเดือน — ก่อน(ส้ม)/หลัง(เขียว) ลด</h2><div id="dMonthlyBA"></div></div>
       </div>
+      <div style="margin-top:12px"><h2 style="font-size:15px">แนวโน้ม Net รายเดือน (กราฟเส้น) — ก่อน/หลังลด</h2><div id="dLineBA"></div></div>
       <p class="note">* เทียบจากข้อมูลที่กรอกในสถานการณ์ “ก่อนลด” และ “หลังลด” ของปีนี้ (รวม 12 เดือน) — แสดงเท่าที่กรอกจริง ไม่มีการสุ่มค่า</p>
     </div>
     <div class="card"><h2 style="font-size:16px">จัดการข้อมูล</h2>
@@ -245,6 +246,7 @@ body.sc-before .kpi.net{border-top-color:#EF6C00}
         <div style="text-align:center"><div class="note">หลังลด</div><svg id="fdonutA" width="160" height="160" viewBox="0 0 240 240"></svg></div></div>
       <div class="legend"><span><i class="dot" style="background:#2E7D32"></i>S1</span><span><i class="dot" style="background:#1565C0"></i>S2</span><span><i class="dot" style="background:#f9a825"></i>S3</span></div></div>
     <div><h2 style="font-size:15px">Net รายเดือน — ก่อน(ส้ม)/หลัง(เขียว) ลด</h2><div id="fMonthly"></div></div></div>
+  <div class="card"><h2>แนวโน้ม Net รายเดือน (กราฟเส้น) — ก่อน/หลังลด (ภาพรวมคณะ)</h2><div id="fLineBA"></div></div>
   <div class="card"><h2>ตารางเทียบรายหน่วยงาน (ก่อน–หลังลด)</h2><div style="overflow:auto"><table id="fTbl"></table></div></div>
   <div class="card"><h2>วิธีเพิ่ม/รวมหน่วยงาน</h2>
     <p class="hint" style="line-height:1.7">
@@ -511,7 +513,7 @@ function renderFaculty(){var year=fyear();var names=Object.keys(MERGE);var allm=
   var fc=document.getElementById('fCount');if(fc)fc.textContent=names.length;
   donutInto('fdonutB',[[B.s1,'#2E7D32'],[B.s2,'#1565C0'],[B.s3,'#f9a825']]);
   donutInto('fdonutA',[[A.s1,'#2E7D32'],[A.s2,'#1565C0'],[A.s3,'#f9a825']]);
-  grpMonthly('fMonthly',monB.map(function(v){return v/1000;}),monA.map(function(v){return v/1000;}));
+  grpMonthly('fMonthly',monB.map(function(v){return v/1000;}),monA.map(function(v){return v/1000;}));lineChart('fLineBA',monB.map(function(v){return v/1000;}),monA.map(function(v){return v/1000;}));
   rows.sort(function(x,y){return y[1].net-x[1].net;});
   var body=rows.map(function(rw){var n=rw[0],b=rw[1],a=rw[2];var red=b.net-a.net;var p=b.net?(red/b.net*100):0;
     return '<tr><td>'+n+'</td><td class="num">'+fmt(b.net/1000)+'</td><td class="num">'+fmt(a.net/1000)+'</td><td class="num">'+fmt(red/1000)+'</td><td class="num">'+fmt(p)+'%</td></tr>';}).join('');
@@ -625,8 +627,18 @@ function renderUnitCompare(){var du=document.getElementById('dCmpUnit');if(!du)r
   donutInto('donutBefore',[[b.s1,'#2E7D32'],[b.s2,'#1565C0'],[b.s3,'#f9a825']]);
   donutInto('donutAfter',[[a.s1,'#2E7D32'],[a.s2,'#1565C0'],[a.s3,'#f9a825']]);
   var bv=[],av=[];for(var m=0;m<12;m++){bv.push(periodTot('before',META.year,m).net/1000);av.push(periodTot('after',META.year,m).net/1000);}
-  grpMonthly('dMonthlyBA',bv,av);}
+  grpMonthly('dMonthlyBA',bv,av);lineChart('dLineBA',bv,av);}
 
+function lineChart(elId,bv,av){var el=document.getElementById(elId);if(!el)return;
+  var W=560,H=190,padL=40,padB=24,padT=10,padR=12;var mx=Math.max(0.001,Math.max.apply(null,bv.concat(av)));
+  var iw=W-padL-padR,ih=H-padT-padB;function X(i){return padL+iw*i/11;}function Y(v){return padT+ih-(ih*Math.max(0,v)/mx);}
+  function ser(vals,color){var d=vals.map(function(v,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);}).join(' ');
+    var p=vals.map(function(v,i){return '<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="2.6" fill="'+color+'"/>';}).join('');
+    return '<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="2.2"/>'+p;}
+  var grid='';for(var gi=0;gi<=2;gi++){var yy=padT+ih*gi/2;grid+='<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'" stroke="#eceff1"/><text x="2" y="'+(yy+3).toFixed(1)+'" font-size="9" fill="#90a4ae">'+fmt(mx*(2-gi)/2)+'</text>';}
+  var lab='';for(var i=0;i<12;i++)lab+='<text x="'+X(i).toFixed(1)+'" y="'+(H-8)+'" font-size="9" fill="#607d8b" text-anchor="middle">'+MONTHS_TH[i]+'</text>';
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:'+W+'px">'+grid+lab+ser(bv,'#EF6C00')+ser(av,'#2E7D32')+'</svg>'+
+    '<div class="legend"><span><i class="dot" style="background:#EF6C00"></i>ก่อนลด</span><span><i class="dot" style="background:#2E7D32"></i>หลังลด</span></div>';}
 /* ---------- init ---------- */
 buildDatalists();buildTabs();fillUnitSelect();cloudInit();
 const cur=LS.current();
